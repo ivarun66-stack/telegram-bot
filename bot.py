@@ -5,7 +5,7 @@ import os
 import time
 
 # Вставь сюда свой токен
-TOKEN = "8788093402:AAHDbaKmBvHsT1RNcElMNVxbr1MjE8OmirE"
+TOKEN = os.environ.get("BOT_TOKEN")
 
 bot = telebot.TeleBot(TOKEN)
 
