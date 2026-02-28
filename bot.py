@@ -3,8 +3,9 @@ import threading
 from flask import Flask
 import os
 import time
+import tempfile
+from ebooklib import epub
 
-# Вставь сюда свой токен
 TOKEN = os.environ.get("BOT_TOKEN")
 
 bot = telebot.TeleBot(TOKEN)
@@ -12,13 +13,15 @@ bot = telebot.TeleBot(TOKEN)
 @bot.message_handler(commands=['start'])
 def start(message):
     bot.reply_to(message, "Бот работает 🚀")
-    import tempfile
-from ebooklib import epub
 
 @bot.message_handler(content_types=['document'])
 def handle_document(message):
-    if message.document.file_name.endswith(".fb2"):
+    file_name = message.document.file_name
+
+    if file_name and file_name.lower().endswith(".fb2"):
         try:
+            bot.reply_to(message, "Получил файл, конвертирую...")
+
             file_info = bot.get_file(message.document.file_id)
             downloaded_file = bot.download_file(file_info.file_path)
 
@@ -34,7 +37,6 @@ def handle_document(message):
             chapter.content = downloaded_file.decode("utf-8", errors="ignore")
 
             book.add_item(chapter)
-            book.toc = (epub.Link("chap_01.xhtml", "Start", "start"),)
             book.add_item(epub.EpubNcx())
             book.add_item(epub.EpubNav())
             book.spine = ['nav', chapter]
@@ -60,14 +62,12 @@ app = Flask(__name__)
 def home():
     return "Bot is running"
 
-# --- Устойчивый polling ---
 def run_bot():
     while True:
         try:
-            print("Bot started polling...")
             bot.polling(none_stop=True, interval=0, timeout=20)
         except Exception as e:
-            print(f"Error: {e}")
+            print(e)
             time.sleep(5)
 
 if __name__ == "__main__":
