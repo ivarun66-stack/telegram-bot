@@ -18,14 +18,13 @@ def start(message):
         message,
         "Привет! 👋\n\n"
         "Доступные команды:\n"
-        "/news — последние новости 📰\n"
         "/tech — новости технологий 💻"
     )
-    )
 
-# ===== НОВОСТИ =====
+# ===== НОВОСТИ ТЕХНОЛОГИЙ =====
 @bot.message_handler(commands=['tech'])
 def tech_news(message):
+
     bot.reply_to(message, "Загружаю новости технологий... 💻")
 
     rss_url = "https://habr.com/ru/rss/articles/"
@@ -42,12 +41,14 @@ def tech_news(message):
 
     bot.send_message(message.chat.id, text)
 
+
 # ===== Flask для Render =====
 app = Flask(__name__)
 
 @app.route('/')
 def home():
     return "Bot is running"
+
 
 # ===== Устойчивый polling =====
 def run_bot():
@@ -58,6 +59,7 @@ def run_bot():
         except Exception as e:
             print(e)
             time.sleep(5)
+
 
 if __name__ == "__main__":
     threading.Thread(target=run_bot).start()
