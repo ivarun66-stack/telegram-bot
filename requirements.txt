@@ -1,4 +1,3 @@
 pyTelegramBotAPI
 flask
 feedparser
-requests
