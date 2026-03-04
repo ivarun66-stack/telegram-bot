@@ -1,4 +1,3 @@
-
 import telebot
 import threading
 from flask import Flask
@@ -10,7 +9,11 @@ from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 
 TOKEN = os.environ.get("BOT_TOKEN")
 
+# ключ OpenWeather
+API_KEY = "6f1e7bed7bca26223656b4f6aa03dbea"
+
 bot = telebot.TeleBot(TOKEN)
+
 
 # ===== КЛАВИАТУРА =====
 def keyboard():
@@ -24,12 +27,16 @@ def keyboard():
 
     markup.add(
         KeyboardButton("📊 Крипто"),
-        KeyboardButton("🌤 Погода")
+        KeyboardButton("📈 BTC")
     )
 
     markup.add(
-        KeyboardButton("🛰 Запуски"),
-        KeyboardButton("📈 Биржи")
+        KeyboardButton("🌤 Погода"),
+        KeyboardButton("📅 Прогноз")
+    )
+
+    markup.add(
+        KeyboardButton("🛰 Запуски")
     )
 
     return markup
@@ -94,17 +101,64 @@ def crypto(message):
     bot.send_message(message.chat.id, text)
 
 
+# ===== BTC =====
+@bot.message_handler(func=lambda m: m.text == "📈 BTC")
+def btc(message):
+
+    url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
+
+    data = requests.get(url).json()
+
+    bot.send_message(
+        message.chat.id,
+        f"📈 BTC цена:\n${data['bitcoin']['usd']}"
+    )
+
+
 # ===== ПОГОДА =====
 @bot.message_handler(func=lambda m: m.text == "🌤 Погода")
 def weather(message):
 
     city = "Omsk"
 
-    url = "https://wttr.in/Omsk?format=3&m"
+    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric&lang=ru"
 
-    data = requests.get(url).text
+    data = requests.get(url).json()
 
-    bot.send_message(message.chat.id, f"🌤 {data}")
+    temp = data["main"]["temp"]
+    desc = data["weather"][0]["description"]
+
+    bot.send_message(
+        message.chat.id,
+        f"🌤 Погода в {city}\n\n"
+        f"{desc}\n"
+        f"🌡 {temp}°C"
+    )
+
+
+# ===== ПРОГНОЗ =====
+@bot.message_handler(func=lambda m: m.text == "📅 Прогноз")
+def forecast(message):
+
+    city = "Omsk"
+
+    url = f"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={API_KEY}&units=metric&lang=ru"
+
+    data = requests.get(url).json()
+
+    text = f"📅 Прогноз для {city}:\n\n"
+
+    for i in range(0, 40, 8):
+
+        day = data["list"][i]
+
+        date = day["dt_txt"].split(" ")[0]
+        temp = day["main"]["temp"]
+        desc = day["weather"][0]["description"]
+
+        text += f"{date}\n{desc}\n🌡 {temp}°C\n\n"
+
+    bot.send_message(message.chat.id, text)
 
 
 # ===== КОСМИЧЕСКИЕ ЗАПУСКИ =====
@@ -126,23 +180,7 @@ def launches(message):
     )
 
 
-# ===== БИРЖИ =====
-@bot.message_handler(func=lambda m: m.text == "📈 Биржи")
-def stocks(message):
-
-    url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
-
-    data = requests.get(url).json()
-
-    price = data["bitcoin"]["usd"]
-
-    bot.send_message(
-        message.chat.id,
-        f"📈 BTC индекс:\n${price}"
-    )
-
-
-# ===== Flask для Render =====
+# ===== Flask =====
 app = Flask(__name__)
 
 @app.route('/')
@@ -150,7 +188,7 @@ def home():
     return "Bot is running"
 
 
-# ===== polling =====
+# ===== BOT =====
 def run_bot():
     while True:
         try:
