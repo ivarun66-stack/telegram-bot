@@ -100,7 +100,7 @@ def weather(message):
 
     city = "Omsk"
 
-    url = "https://wttr.in/Omsk?format=3"
+    url = "https://wttr.in/Omsk?format=3&m"
 
     data = requests.get(url).text
 
