@@ -22,23 +22,23 @@ def start(message):
     )
 
 # ===== НОВОСТИ =====
-@bot.message_handler(commands=['news'])
-def get_news(message):
-    bot.reply_to(message, "Загружаю новости... ⏳")
+@bot.message_handler(commands=['tech'])
+def tech_news(message):
+    bot.reply_to(message, "Загружаю новости технологий... 💻")
 
-    rss_url = "https://www.space.com/feeds/all"  # космические новости
+    rss_url = "https://habr.com/ru/rss/articles/"
     feed = feedparser.parse(rss_url)
 
     if not feed.entries:
         bot.send_message(message.chat.id, "Новости не найдены.")
         return
 
-    news_text = "🚀 Последние космические новости:\n\n"
+    text = "💻 Последние новости технологий:\n\n"
 
     for entry in feed.entries[:5]:
-        news_text += f"• {entry.title}\n{entry.link}\n\n"
+        text += f"• {entry.title}\n{entry.link}\n\n"
 
-    bot.send_message(message.chat.id, news_text)
+    bot.send_message(message.chat.id, text)
 
 # ===== Flask для Render =====
 app = Flask(__name__)
